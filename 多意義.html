@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>多益精英訓練營</title>
+<style>
+:root {
+--primary: #2A4365;
+--secondary: #4299E1;
+--success: #48BB78;
+--danger: #F56565;
+--light: #F7FAFC;
+--dark: #2D3748;
+}
+
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+
+body {
+font-family: 'Inter', system-ui;
+line-height: 1.6;
+background: var(--light);
+min-height: 100vh;
+padding: 2rem;
+}
+
+.container {
+max-width: 800px;
+margin: 0 auto;
+background: white;
+border-radius: 1.5rem;
+box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+overflow: hidden;
+}
+
+.header {
+background: var(--primary);
+padding: 2rem;
+color: white;
+text-align: center;
+}
+
+.header h1 {
+font-size: 2.2rem;
+margin-bottom: 0.5rem;
+}
+
+.quiz-area {
+padding: 2rem;
+}
+
+.question-card {
+background: var(--light);
+border-radius: 0.75rem;
+padding: 1.5rem;
+margin-bottom: 1.5rem;
+border: 2px solid transparent;
+transition: all 0.3s ease;
+}
+
+.question-card:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.question-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 1rem;
+}
+
+.difficulty {
+font-size: 0.9rem;
+padding: 0.25rem 0.75rem;
+border-radius: 1rem;
+background: var(--secondary);
+color: white;
+}
+
+.options-grid {
+display: grid;
+gap: 0.75rem;
+}
+
+.option-label {
+display: flex;
+align-items: center;
+padding: 1rem;
+border: 2px solid #E2E8F0;
+border-radius: 0.5rem;
+cursor: pointer;
+transition: all 0.2s ease;
+}
+
+.option-label:hover {
+border-color: var(--secondary);
+background: rgba(66, 153, 225, 0.05);
+}
+
+.option-label.selected {
+border-color: var(--secondary);
+background: rgba(66, 153, 225, 0.1);
+}
+
+.controls {
+display: flex;
+justify-content: center;
+gap: 1rem;
+margin-top: 2rem;
+}
+
+button {
+padding: 0.8rem 1.5rem;
+border: none;
+border-radius: 0.5rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s ease;
+}
+
+.submit-btn {
+background: var(--success);
+color: white;
+}
+
+.submit-btn:hover {
+background: #38A169;
+}
+
+.reset-btn {
+background: var(--secondary);
+color: white;
+}
+
+.reset-btn:hover {
+background: #3182CE;
+}
+
+.result-panel {
+background: var(--light);
+border-radius: 1rem;
+padding: 2rem;
+margin-top: 2rem;
+animation: slideIn 0.3s ease;
+}
+
+.score-display {
+text-align: center;
+font-size: 1.5rem;
+margin-bottom: 1.5rem;
+padding: 1rem;
+border-radius: 0.5rem;
+}
+
+.correct-answer {
+background: rgba(72, 187, 120, 0.1);
+border: 2px solid var(--success);
+}
+
+.wrong-answer {
+background: rgba(245, 101, 101, 0.1);
+border: 2px solid var(--danger);
+}
+
+@keyframes slideIn {
+from { opacity: 0; transform: translateY(20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+input[type="radio"] {
+display: none;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>TOEIC 精英訓練營</h1>
+<p>智能題庫系統 • 五級難度分階</p>
+</div>
+
+<div class="quiz-area">
+<div id="questionsContainer"></div>
+
+<div class="controls">
+<button class="submit-btn" onclick="handleSubmit()">提交測驗</button>
+<button class="reset-btn" onclick="initializeQuiz()">重新開始</button>
+</div>
+
+<div id="resultContainer" class="result-panel"></div>
+</div>
+</div>
+
+<script>
+// 完整題庫示例（含更多題目）
+const questionBank = [
+// 難度1
+{
+question: "The train will depart ______ platform three.",
+options: ["at", "on", "in", "by"],
+answer: 1,
+explanation: "'on' 用於表示在某個平面上",
+difficulty: 1
+},
+{
+question: "She is looking forward ______ meeting you.",
+options: ["to", "at", "in", "for"],
+answer: 0,
+explanation: "固定片語 'look forward to'",
+difficulty: 1
+},
+// 難度2
+{
+question: "They ______ to the new office last month.",
+options: ["move", "moved", "will move", "moving"],
+answer: 1,
+explanation: "'last month' 表示過去時間，用過去式",
+difficulty: 2
+},
+{
+question: "If I ______ you, I would take an umbrella.",
+options: ["am", "was", "were", "be"],
+answer: 2,
+explanation: "假設語氣，用 'were'",
+difficulty: 2
+},
+// 難度3
+{
+question: "The company announced a significant increase ______ its profits.",
+options: ["in", "on", "at", "of"],
+answer: 0,
+explanation: "'increase in' 是固定用法",
+difficulty: 3
+},
+{
+question: "Despite the heavy rain, ______ of the participants arrived on time.",
+options: ["most", "most of", "the most", "almost"],
+answer: 1,
+explanation: "'most of' 後接限定詞",
+difficulty: 3
+},
+// 難度4
+{
+question: "The manager was praised ______ his exceptional leadership skills.",
+options: ["for", "of", "by", "with"],
+answer: 0,
+explanation: "'praised for' 表示因...而被稱讚",
+difficulty: 4
+},
+{
+question: "______ the complexity of the project, the team managed to finish it ahead of schedule.",
+options: ["However", "Despite", "Although", "Because"],
+answer: 1,
+explanation: "'Despite' 用於引導表示轉折的語氣",
+difficulty: 4
+},
+// 難度5
+{
+question: "The board of directors will convene next week ______ the proposed merger.",
+options: ["regarding", "respecting", "concerning", "as to"],
+answer: 0,
+explanation: "'regarding' 表示關於...",
+difficulty: 5
+},
+{
+question: "His eloquent speech was ______ well-received by the audience.",
+options: ["exceedingly", "excessively", "extremely", "intensely"],
+answer: 0,
+explanation: "'exceedingly' 強調程度之高",
+difficulty: 5
+},
+{
+question: "The new policy aims to ______ greater transparency in financial reporting.",
+options: ["elicit", "solicit", "incur", "foster"],
+answer: 3,
+explanation: "'foster' 有促進、培養之意，符合語境",
+difficulty: 3
+},
+{
+question: "The scientist's groundbreaking research ______ a new era in medical treatment.",
+options: ["ushered in", "turned out", "resulted from", "came across"],
+answer: 0,
+explanation: "'ushered in' 意為開創、引領",
+difficulty: 4
+},
+{
+question: "The company decided to ______ its operations in the European market due to unforeseen economic challenges.",
+options: ["augment", "consolidate", "diversify", "curtail"],
+answer: 3,
+explanation: "'curtail' 意為縮減、限制",
+difficulty: 5
+},
+{
+question: "Despite his initial reluctance, he eventually ______ to the idea of relocating to a new city.",
+options: ["acceded", "conceded", "preceded", "receded"],
+answer: 0,
+explanation: "'acceded' 意為同意、讓步",
+difficulty: 4
+},
+{
+question: "The intricate details of the artwork were ______ only upon closer inspection.",
+options: ["palpable", "discernible", "tangible", "ostensible"],
+answer: 1,
+explanation: "'discernible' 意為可辨別的、可看出的",
+difficulty: 3
+}
+];
+
+let currentSession = [];
+let selectedAnswers = {}; // 用於儲存使用者的答案
+
+function initializeQuiz() {
+// 智能分級抽題系統 (確保每個難度都有一題)
+const difficultyMap = new Map();
+for(let i=1; i<=5; i++) {
+const pool = questionBank.filter(q => q.difficulty === i);
+if (pool.length > 0) {
+const randomIndex = Math.floor(Math.random() * pool.length);
+difficultyMap.set(i, pool[randomIndex]);
+} else {
+console.warn(`Warning: No questions found for difficulty level ${i}`);
+}
+}
+currentSession = Array.from(difficultyMap.values()).filter(q => q !== undefined);
+
+// 如果題目少於5題，從題庫中隨機抽取補足
+while (currentSession.length < 5 && questionBank.length > currentSession.length) {
+const randomIndex = Math.floor(Math.random() * questionBank.length);
+const randomQuestion = questionBank[randomIndex];
+if (!currentSession.includes(randomQuestion)) {
+currentSession.push(randomQuestion);
+}
+}
+
+// 隨機打亂題目順序
+currentSession = shuffleArray(currentSession);
+
+renderQuestions();
+document.getElementById('resultContainer').innerHTML = '';
+selectedAnswers = {}; // 清空之前的答案
+}
+
+// 洗牌演算法 (Fisher-Yates)
+function shuffleArray(array) {
+for (let i = array.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[array[i], array[j]] = [array[j], array[i]];
+}
+return array;
+}
+
+function renderQuestions() {
+const container = document.getElementById('questionsContainer');
+container.innerHTML = currentSession.map((q, index) => `
+<div class="question-card">
+<div class="question-header">
+<h3>題目 ${index + 1}</h3>
+<span class="difficulty">難度 ${q.difficulty}</span>
+</div>
+<p>${q.question}</p>
+<div class="options-grid">
+${q.options.map((opt, i) => `
+<label class="option-label ${selectedAnswers[index] === i ? 'selected' : ''}" onclick="selectOption(this, ${index}, ${i})">
+<input type="radio" name="q${index}" value="${i}" ${selectedAnswers[index] === i ? 'checked' : ''}>
+${opt}
+</label>
+`).join('')}
+</div>
+</div>
+`).join('');
+}
+
+function selectOption(label, questionIndex, optionIndex) {
+// 清除同題其他選項的選中狀態
+const questionCard = label.closest('.question-card');
+questionCard.querySelectorAll('.option-label').forEach(opt => {
+opt.classList.remove('selected');
+});
+label.classList.add('selected');
+selectedAnswers[questionIndex] = optionIndex; // 儲存答案
+}
+
+function handleSubmit() {
+let totalScore = 0;
+const results = currentSession.map((q, index) => {
+const userAnswer = selectedAnswers[index];
+const isCorrect = userAnswer === q.answer;
+if(isCorrect) totalScore += (100 / currentSession.length); // 根據題目數量平均分配分數
+
+return {
+...q,
+userAnswer,
+isCorrect
+};
+});
+
+showResults(Math.round(totalScore), results);
+}
+
+function showResults(score, results) {
+const resultHTML = `
+<div class="score-display ${score >= 60 ? 'correct-answer' : 'wrong-answer'}">
+最終得分：<strong>${score}</strong>/100
+</div>
+${results.map((r, i) => `
+<div class="${r.isCorrect ? 'correct-answer' : 'wrong-answer'}" style="padding:1rem;margin-bottom:1rem;border-radius:0.5rem">
+<h4>第 ${i+1} 題：${r.isCorrect ? '正確 ✓' : '錯誤 ✗'}</h4>
+<p>✏️ 你的答案：${r.userAnswer !== undefined ? r.options[r.userAnswer] : '未作答'}</p>
+<p>✅ 正確答案：${r.options[r.answer]}</p>
+<p style="margin-top:0.5rem;color:var(--dark)">📚 解析：${r.explanation}</p>
+</div>
+`).join('')}
+`;
+
+document.getElementById('resultContainer').innerHTML = resultHTML;
+window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+// 初始化測驗
+initializeQuiz();
+</script>
+</body>
+</html>
